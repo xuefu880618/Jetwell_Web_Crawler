@@ -17,10 +17,13 @@ def download_page(url, folder_path, visited_urls=set()):
 
     try:
         response = requests.get(url, headers={
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+            #"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+            
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
         })
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
-        html_content = response.content.decode('utf-8')
+        print(response)
+        #html_content = response.content.decode('utf-8')
         
     except requests.exceptions.RequestException as e:
         print(f"Failed to connect to {url}: {e}")
@@ -33,7 +36,7 @@ def download_page(url, folder_path, visited_urls=set()):
     content = response.content
     encoding = response.encoding if response.encoding is not None else 'utf-8'
     decoded_content = content.decode(encoding, errors='replace')
-
+    #print(decoded_content)
     try:
         soup = BeautifulSoup(decoded_content, "html.parser")  # Or "lxml" or "html5lib"
         
@@ -44,13 +47,13 @@ def download_page(url, folder_path, visited_urls=set()):
             iframe_tag.decompose()
 
         for script_tag in soup.find_all('script'):
-            script_tag.decompose()
+           script_tag.decompose()
 
     except Exception as e:
         print(f"Failed to parse {url}: {e}")
         return    
     
-    #print(decoded_content)
+    
 
     file_name = urlparse(url).path.split("/")[-1] or "index"
     base_pdf_file_name = file_name.replace('.htm', '').replace('.html', '').replace('.aspx', '').replace('.php', '')
@@ -86,24 +89,28 @@ def download_page(url, folder_path, visited_urls=set()):
         pdfkit.from_string(str(soup), pdf_file_name, configuration=config, options = options)
 
         print(f"Saved: {pdf_file_name} Connected to {url}")
-        # Convert PDF to grayscale
-        #convert_to_grayscale(pdf_file_name)
+        
 
     except Exception as e:
 
         print(f"Failed to convert {url} to PDF: {e}")
-        #convert_to_grayscale(pdf_file_name)
     
     # Parse page content to find hyperlinks
     links = soup.find_all("a", href=True)
     base_domain = urlparse(url).netloc
-
+    #print(soup)
     for link in links:
-        href = link["href"]
-        if not href.startswith("http"):
+        href = link.get('href')
+        
+        if href.startswith('#') or href.startswith('mailto:') or href.startswith('tel:'):
+            continue  # Skip internal anchors, mailto, and tel links
+
+        if not href.startswith('http'):
+            # Convert relative URL to absolute URL
             linked_url = urljoin(url, href)
         else:
             linked_url = href
+        
 
         # Skip downloading non-text files
         if linked_url.split('?')[0].endswith(('.pdf','.csv', '.rar', '.zip', '.exe', '.doc', '.docx','.jpg','.png','.tiff','.ppt','.xls','.xlsx')):
@@ -172,7 +179,7 @@ def main():
     url = sys.argv[1]
     folder_path = sys.argv[2]
 
-    download_page(url, folder_path)
+    #download_page(url, folder_path)
     merge_to_single_pdf(folder_path)
 
 if __name__ == "__main__":
