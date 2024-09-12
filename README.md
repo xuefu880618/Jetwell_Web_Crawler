@@ -4,5 +4,4 @@
 
 
 ```bash
-pip install requests PyPDF2
 python convert_pdf.py <url> <folder_path>
