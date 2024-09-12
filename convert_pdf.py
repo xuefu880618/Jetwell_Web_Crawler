@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 import pdfkit  # Make sure to install this library
 from PyPDF2 import PdfFileMerger
-import fitz
 import sys
+
 def download_page(url, folder_path, visited_urls=set()):
     if url in visited_urls:
         return
